@@ -1,28 +1,30 @@
 const express = require('express')
+const cors = require('cors')
 const app = express()
+app.use(cors())
 app.use(express.json())
 
-const PORT = 3004
+const PORT = process.env.PORT || 3004
 let persons = [
     {
         id: 1,
         name: "Arto Hellas",
-        number: "0810-0000-1111"
+        phone: "0810-0000-1111"
     },
     {
         id: 2,
         name: "Giovanni",
-        number: "9999-9999-9999"
+        phone: "9999-9999-9999"
     },
     {
         id: 3,
         name: "Romanoff",
-        number: "6666666666"
+        phone: "6666666666"
     },
     {
         id: 5,
         name: "Liberte",
-        number: "83238767"
+        phone: "83238767"
     }
 ]
 
@@ -51,8 +53,8 @@ app.get('/api/persons', (request, response) => {
 app.post('/api/persons', (request, response) => {
     const body = request.body
 
-    if (!body.number || !body.name) {
-        console.log('Number is', body.number)
+    if (!body.phone || !body.name) {
+        console.log('Number is', body.phone)
         console.log('Name is', body.name)
         return response.status(400).json({
             error: 'content missing'
@@ -67,7 +69,7 @@ app.post('/api/persons', (request, response) => {
 
     const person = {
         name: body.name,
-        number: body.number,
+        phone: body.phone,
         id: generateId(),
     }
     persons = persons.concat(person)
