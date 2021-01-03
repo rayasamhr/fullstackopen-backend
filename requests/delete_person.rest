@@ -1,1 +1,1 @@
-DELETE http://localhost:3004/api/persons/2
+DELETE https://hidden-island-96366.herokuapp.com/persons/2

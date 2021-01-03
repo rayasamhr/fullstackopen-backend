@@ -10,7 +10,7 @@ app.use(cors())
 app.use(express.static('build'))
 app.use(express.json())
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 3004
 
 const morgan = require('morgan')
 morgan.token('contents', (request, result) => JSON.stringify(request.body))
