@@ -13,13 +13,8 @@ app.use(express.json())
 const PORT = process.env.PORT
 
 const morgan = require('morgan')
-const { isValidObjectId, Mongoose } = require('mongoose')
 morgan.token('contents', (request, result) => JSON.stringify(request.body))
 app.use(morgan(':method :url :status - :response-time ms :contents'))
-
-app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
-})
 
 app.get('/api/persons', (request, response) => {
     Person.find({})
