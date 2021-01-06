@@ -4,28 +4,35 @@ require('dotenv').config()
 const Person = require('./models/person')
 const express = require('express')
 const cors = require('cors')
-
-const app = express()
-app.use(cors())
-app.use(express.static('build'))
-app.use(express.json())
-
 const PORT = process.env.PORT || 3004
 
+const app = express()
+
+//Enables cross origin resource sharing requests
+app.use(cors())
+
+app.use(express.static('build'))
+
+//Parses incoming request with JSON payloads and translates
+//it to JSON object (so you can use methods like request.body)
+app.use(express.json())
+
+//Prints details of incoming HTTP requests to console
 const morgan = require('morgan')
+const { request, response } = require('express')
 morgan.token('contents', (request, result) => JSON.stringify(request.body))
 app.use(morgan(':method :url :status - :response-time ms :contents'))
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
     Person.find({})
         .then(personList => {
             console.log("Fetching all persons...")
             response.json(personList)
         })
-        .catch(err => console.log("ERROR GETTING ALL PERSONS", err))
+        .catch(err => next(err))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
 
     if (!body.phone || !body.name) {
@@ -36,12 +43,6 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    // if (persons.some(person => person.name === body.name)) {
-    //     return response.status(400).json({
-    //         error: `${body.name} already exists in the phonebook`
-    //     })
-    // }
-
     const person = new Person({
         name: body.name,
         phone: body.phone,
@@ -51,39 +52,65 @@ app.post('/api/persons', (request, response) => {
             console.log("Uploading new person, name:", savedPerson.name)
             response.json(savedPerson)
         })
-        .catch(err => console.log('ERROR POSTING:', err))
+        .catch(err => next(err))
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id)
         .then(personRes => {
-            console.log("Found", personRes)
-            response.json(personRes)
-        }).catch(err => {
-            console.log(err);
-            response.status(500).end()
-        })
+            if (personRes) {
+                response.json(personRes)
+            } else {
+                response.status(404).end();
+            }
+        }).catch(err => next(err))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.put('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndUpdate(request.params.id, request.body, { new: true })
+        .then(updatedNote => response.json(updatedNote))
+        .catch(err => next(err));
+})
+
+app.delete('/api/persons/:id', (request, response, next) => {
     const id = request.params.id
     Person.deleteOne({
         "_id": id
     }).then(res => response.status(204).end())
-        .catch(err => console.log(err))
+        .catch(err => next(err))
 })
 
 
 app.get('/info', (request, response) => {
-    response.send(`
-    <p>
-        Phonebook has info for ${persons.length} people
-    </p>
-    <p>
-        ${new Date().toUTCString()}
-    </p>`)
+    Person.countDocuments({})
+        .then(res => {
+            response.send(`
+                <div>
+                    <p>
+                        Phonebook has info for ${res} people
+                    </p>
+                    <p>
+                        ${new Date().toUTCString()}
+                    </p>
+                </div>
+            `)
+        });
 })
 
+//Handles all other endpoints that have not been defined
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'Unknown Endpoint' })
+}
+
+app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'Malformatted ID' });
+    }
+}
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)

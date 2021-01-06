@@ -1,7 +1,0 @@
-POST http://https://hidden-island-96366.herokuapp.com/api/persons
-Content-Type: application/json
-
-{
-    "name": "Barthaq",
-    "phone": "0800-99999"
-}
