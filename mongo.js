@@ -1,13 +1,24 @@
 let Person = {}
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator');
 
 const getURL = pwd => `mongodb+srv://fullstack:${pwd}@cluster0.fvr2y.mongodb.net/phonebook?retryWrites=true&w=majority`
 const connectToDatabase = url => {
     mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true })
     const personSchema = new mongoose.Schema({
-        name: String,
-        phone: Number,
+        name: {
+            type: String,
+            minlength: 3,
+            required: true,
+            unique: true,
+        },
+        phone: {
+            type: Number,
+            minlength: 8,
+            required: true
+        },
     });
+    personSchema.plugin(uniqueValidator);
     Person = mongoose.model('Person', personSchema);
 }
 

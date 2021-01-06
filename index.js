@@ -67,7 +67,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-    Person.findByIdAndUpdate(request.params.id, request.body, { new: true })
+    Person.findByIdAndUpdate(request.params.id, request.body, { new: true, runValidators: true, context: 'query' })
         .then(updatedNote => response.json(updatedNote))
         .catch(err => next(err));
 })
@@ -107,7 +107,11 @@ app.use(unknownEndpoint);
 const errorHandler = (error, request, response, next) => {
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'Malformatted ID' });
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).send({ error: error.message})
     }
+
+    next(error);
 }
 
 app.use(errorHandler);
